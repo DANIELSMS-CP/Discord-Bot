@@ -6,35 +6,46 @@ import requests
 import json
 
 load_dotenv()
-
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
-
-def get_price():
-    api_url = "https://min-api.cryptocompare.com/data/generateAvg?fsym=BTC&tsym=USD&e=coinbase"
-    response = requests.get(api_url)
-    data = response.json()
-    raw_data = data.get("RAW")
-    if raw_data:
-        pretty_data = json.dumps({"RAW": raw_data}, indent=4)
-        return pretty_data
-    else:
-        return "Data not found"
+client = commands.Bot(intents=intents, command_prefix='!')
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
+@client.command()
+async def hello(ctx):
+    await ctx.send('Hello!')
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello! :3')
-    elif message.content.startswith('$bitcoin'):
-        price_data = get_price()
-        await message.channel.send(f"```json\n{price_data}\n```")
+@client.command()
+async def ping(ctx):
+    await ctx.send('pong')
+
+@client.command()
+async def stalk(ctx, handle: str):
+    await ctx.send(f'{handle}: last 10 problems solved')
+    link = f'https://codeforces.com/api/user.status?handle={handle}'
+    req_info = requests.get(link)
+    json_obj = req_info.json()
+    last_correct_problems = []
+    counter = 0
+    for submissions in json_obj['result']:
+        if submissions['verdict'] == 'OK':
+            last_correct_problems.append(submissions['problem']['name'])
+    for problem in last_correct_problems:
+        if counter == 10:
+            break
+        await ctx.send(problem)
+        counter += 1
+
+# TODO : 
+@client.command()
+async def ()
+
+@client.event # TODO: fix
+async def on_member_join(member):
+    channel = client.get_channel(1282737788084555928)
+    await channel.send('Hi, welcome!')
 
 client.run(os.getenv('TOKEN'))
